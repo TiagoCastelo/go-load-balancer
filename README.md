@@ -9,4 +9,4 @@ Quick start:
 Docker demo:
 - cd deployments
 - docker compose up --build -d
-- Open http://localhost:8080
+- Open http://localhost:9080

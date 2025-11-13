@@ -1,0 +1,51 @@
+﻿services:
+  backend1:
+    build:
+      context: ../test/backends/backend1
+      dockerfile: ../../../deployments/docker/Dockerfile.backend
+    container_name: backend1
+    networks:
+      - lb-network
+    restart: unless-stopped
+
+  backend2:
+    build:
+      context: ../test/backends/backend2
+      dockerfile: ../../../deployments/docker/Dockerfile.backend
+    container_name: backend2
+    networks:
+      - lb-network
+    restart: unless-stopped
+
+  backend3:
+    build:
+      context: ../test/backends/backend3
+      dockerfile: ../../../deployments/docker/Dockerfile.backend
+    container_name: backend3
+    networks:
+      - lb-network
+    restart: unless-stopped
+
+  loadbalancer:
+    build:
+      context: ..
+      dockerfile: deployments/docker/Dockerfile.loadbalancer
+    container_name: go-load-balancer
+    ports:
+      - "9080:9080"
+    networks:
+      - lb-network
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+    command: [
+      "-backends=http://backend1:8080,http://backend2:8080,http://backend3:8080",
+      "-port=9080",
+      "-algorithm=round-robin"
+    ]
+    restart: unless-stopped
+
+networks:
+  lb-network:
+    driver: bridge

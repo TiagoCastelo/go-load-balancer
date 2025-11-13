@@ -1,0 +1,12 @@
+﻿# Ignore everything by default
+**/.git
+**/.github
+**/.vscode
+**/.idea
+**/docs
+**/scripts
+**/*.md
+**/*.log
+**/bin
+**/dist
+**/*.exe

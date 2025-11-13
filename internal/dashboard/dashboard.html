@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load Balancer Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-title {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .backend-list {
+            list-style: none;
+        }
+        .backend-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .backend-info {
+            display: flex;
+            align-items: center;
+            min-width: 150px;
+        }
+        .backend-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .backend-requests {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-left: auto;
+            padding-left: 15px;
+        }
+        .status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status.up { background: #28a745; box-shadow: 0 0 8px #28a745; }
+        .status.down { background: #dc3545; box-shadow: 0 0 8px #dc3545; }
+
+        .progress-container {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .refresh-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.3);
+        }
+        .auto-refresh {
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚀 Load Balancer Dashboard</h1>
+
+    <div class="stats-grid">
+        <div class="card">
+            <div class="card-title">Total Requests Served</div>
+            <div class="card-value" id="total-requests">0</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">System Uptime</div>
+            <div class="card-value" id="uptime" style="font-size: 1.5em;">0s</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Backend Health & Traffic Distribution</div>
+        <ul class="backend-list" id="backend-list">
+            <li style="text-align: center; color: #888;">Loading data...</li>
+        </ul>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshStats()">Refresh Data</button>
+    <div class="auto-refresh">Auto-refreshing every 2 seconds</div>
+</div>
+
+<script>
+    function refreshStats() {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                // 1. Update Global Stats
+                document.getElementById('total-requests').textContent = data.total_requests;
+                document.getElementById('uptime').textContent = data.uptime;
+
+                const backendList = document.getElementById('backend-list');
+                backendList.innerHTML = ''; // Clear list
+
+                // 2. Calculate Max for Progress Bars
+                // Handle empty requests gracefully
+                let requestsValues = Object.values(data.backend_requests);
+                let maxRequests = requestsValues.length > 0 ? Math.max(...requestsValues) : 0;
+
+                // 3. Loop through backends and render
+                // sorting keys ensures the list order doesn't jump around
+                const sortedBackends = Object.keys(data.backend_requests).sort();
+
+                if (sortedBackends.length === 0) {
+                    backendList.innerHTML = '<li style="padding:15px; text-align:center;">No backends connected</li>';
+                    return;
+                }
+
+                sortedBackends.forEach(backend => {
+                    const requests = data.backend_requests[backend];
+                    const isAlive = data.backend_status[backend];
+
+                    // Avoid division by zero
+                    const percentage = maxRequests > 0 ? (requests / maxRequests) * 100 : 0;
+
+                    const li = document.createElement('li');
+                    li.className = 'backend-item';
+
+                    // Using Template Literals (Backticks) for clean HTML generation
+                    li.innerHTML = `
+                            <div class="backend-info">
+                                <span class="status ${isAlive ? 'up' : 'down'}" title="${isAlive ? 'Online' : 'Offline'}"></span>
+                                <span class="backend-name">${backend}</span>
+                            </div>
+                            <div class="backend-requests">${requests} reqs</div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percentage}%">
+                                        ${percentage > 10 ? percentage.toFixed(1) + '%' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                    backendList.appendChild(li);
+                });
+            })
+            .catch(err => console.error("Error fetching stats:", err));
+    }
+
+    // Start the loop
+    setInterval(refreshStats, 2000);
+
+    // Run once on load
+    window.onload = refreshStats;
+</script>
+</body>
+</html>

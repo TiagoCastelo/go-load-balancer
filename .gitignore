@@ -1,0 +1,31 @@
+﻿# Binaries
+go-load-balancer
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build directories
+bin/
+dist/
+
+# Go
+vendor/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Coverage
+coverage.out
+
+# Docker
+.env
+*.log

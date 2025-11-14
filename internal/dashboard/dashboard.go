@@ -1,14 +1,13 @@
-﻿package dashboard
+package dashboard
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
-
-	_ "embed" // Required for the //go:embed directive
 )
 
 //go:embed dashboard.html

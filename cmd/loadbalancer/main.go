@@ -1,20 +1,19 @@
-﻿package main
+package main
 
 import (
 	"context"
 	"flag"
 	"fmt"
+	"go-load-balancer/internal/backend"
+	"go-load-balancer/internal/balancer"
+	"go-load-balancer/internal/config"
+	"go-load-balancer/internal/dashboard"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"go-load-balancer/internal/backend"
-	"go-load-balancer/internal/balancer"
-	"go-load-balancer/internal/config"
-	"go-load-balancer/internal/dashboard"
 )
 
 func main() {

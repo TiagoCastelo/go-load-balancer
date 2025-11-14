@@ -1,13 +1,12 @@
-﻿package balancer
+package balancer
 
 import (
+	"go-load-balancer/internal/backend"
+	"go-load-balancer/internal/dashboard"
 	"log"
 	"net/http"
 	"sync/atomic"
 	"time"
-
-	"go-load-balancer/internal/backend"
-	"go-load-balancer/internal/dashboard"
 )
 
 // LoadBalancer manages backend servers

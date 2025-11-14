@@ -1,4 +1,5 @@
-﻿name: CI
+﻿
+name: CI
 
 on:
   push:
@@ -17,6 +18,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21.x'
+          cache: true
 
       - name: Check formatting
         run: |
@@ -25,8 +27,14 @@ jobs:
             echo "These files are not gofmt'd:" && echo "$UNFORMATTED" && exit 1
           fi
 
+      - name: Vet
+        run: go vet ./...
+
       - name: Build
         run: go build ./...
 
       - name: Test
-        run: go test ./...
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Coverage
+        run: go tool cover -func=coverage.out
